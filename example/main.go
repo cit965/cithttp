@@ -10,17 +10,29 @@ import (
 func main() {
 	e := Default()
 	e.GET("foo", Foo)
+	e.GET("bff", Bff)
 	http.ListenAndServe(":8888", e)
 }
 
-type MyHandler func(ctx cithttp.Context)
+type MyHandler func(ctx *cithttp.Context)
 
 type Engine struct {
 	router map[string]MyHandler
 }
 
-func Foo(ctx cithttp.Context) {
-	ctx.Res.Write([]byte("你 正 在 请求 foo 函数"))
+func Foo(ctx *cithttp.Context) {
+
+	inlineStruct := struct {
+		Sss int `json:"sss"`
+	}{
+		2343,
+	}
+	ctx.Json(200, inlineStruct)
+}
+
+func Bff(ctx *cithttp.Context) {
+
+	ctx.String("bfff  handler")
 }
 
 func Default() *Engine {
