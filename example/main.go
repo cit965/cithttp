@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/cit965/cithttp"
 	"net/http"
 	"strings"
 )
@@ -12,14 +13,14 @@ func main() {
 	http.ListenAndServe(":8888", e)
 }
 
-type MyHandler func(res http.ResponseWriter, req *http.Request)
+type MyHandler func(ctx cithttp.Context)
 
 type Engine struct {
 	router map[string]MyHandler
 }
 
-func Foo(res http.ResponseWriter, req *http.Request) {
-	res.Write([]byte("你 正 在 请求 foo 函数"))
+func Foo(ctx cithttp.Context) {
+	ctx.Res.Write([]byte("你 正 在 请求 foo 函数"))
 }
 
 func Default() *Engine {
@@ -37,7 +38,7 @@ func (e *Engine) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		res.Write([]byte("404"))
 		return
 	}
-	r(res, req)
+	r(cithttp.NewContext(req, res))
 }
 
 func (e *Engine) GET(path string, h MyHandler) {
