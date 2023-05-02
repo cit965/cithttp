@@ -8,6 +8,7 @@ func main() {
 	e := cithttp.Default()
 	e.GET("foo", Foo)
 	e.GET("bff", Bff)
+	e.POST("bff", Bff)
 	e.Run(":8888")
 }
 

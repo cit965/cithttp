@@ -9,7 +9,7 @@ import (
 type MyHandler func(ctx *Context)
 
 type Engine struct {
-	router map[string]MyHandler
+	router map[string]map[string]MyHandler
 }
 
 func (e *Engine) Run(address string) {
@@ -18,14 +18,26 @@ func (e *Engine) Run(address string) {
 }
 
 func Default() *Engine {
+
+	router := map[string]map[string]MyHandler{}
+	getRouter := map[string]MyHandler{}
+	postRouter := map[string]MyHandler{}
+	router["GET"] = getRouter
+	router["POST"] = postRouter
 	return &Engine{
-		router: map[string]MyHandler{},
+		router,
 	}
 }
 
 func (e *Engine) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	path := strings.Trim(req.URL.Path, "/")
-	r, ok := e.router[path]
+	method := strings.ToUpper(req.Method)
+	handlerMap, ok := e.router[method]
+	if !ok {
+		log.Println("not found method")
+		return
+	}
+	r, ok := handlerMap[path]
 	if !ok {
 		res.WriteHeader(404)
 		res.Write([]byte("404"))
@@ -35,5 +47,9 @@ func (e *Engine) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 }
 
 func (e *Engine) GET(path string, h MyHandler) {
-	e.router[path] = h
+	e.router["GET"][path] = h
+}
+
+func (e *Engine) POST(path string, h MyHandler) {
+	e.router["POST"][path] = h
 }
