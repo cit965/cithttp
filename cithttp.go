@@ -46,10 +46,34 @@ func (e *Engine) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	r(NewContext(req, res))
 }
 
+type Group struct {
+	engin  *Engine
+	prefix string
+}
+
 func (e *Engine) GET(path string, h MyHandler) {
 	e.router["GET"][path] = h
 }
 
 func (e *Engine) POST(path string, h MyHandler) {
 	e.router["POST"][path] = h
+}
+
+func NewGroup(e *Engine, prefix string) *Group {
+	return &Group{
+		engin:  e,
+		prefix: prefix,
+	}
+}
+func (e *Engine) Group(prefix string) *Group {
+
+	return NewGroup(e, prefix)
+}
+
+func (g *Group) GET(path string, h MyHandler) {
+	g.engin.GET(g.prefix+path, h)
+}
+
+func (g *Group) POST(path string, h MyHandler) {
+	g.engin.POST(g.prefix+path, h)
 }

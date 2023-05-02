@@ -9,6 +9,10 @@ func main() {
 	e.GET("foo", Foo)
 	e.GET("bff", Bff)
 	e.POST("bff", Bff)
+	group := e.Group("xfa/")
+	{
+		group.GET("ccc", Bff)
+	}
 	e.Run(":8888")
 }
 
