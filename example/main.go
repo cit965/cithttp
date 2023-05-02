@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/cit965/cithttp"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -11,13 +12,18 @@ func main() {
 	e := Default()
 	e.GET("foo", Foo)
 	e.GET("bff", Bff)
-	http.ListenAndServe(":8888", e)
+	e.Run(":8888")
 }
 
 type MyHandler func(ctx *cithttp.Context)
 
 type Engine struct {
 	router map[string]MyHandler
+}
+
+func (e *Engine) Run(address string) {
+	log.Println("start to listen on port:", address)
+	http.ListenAndServe(address, e)
 }
 
 func Foo(ctx *cithttp.Context) {
