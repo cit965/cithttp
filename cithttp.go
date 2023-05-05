@@ -9,7 +9,7 @@ import (
 type MyHandler func(ctx *Context)
 
 type Engine struct {
-	router map[string]map[string]MyHandler
+	router map[string]*Tree
 }
 
 func (e *Engine) Run(address string) {
@@ -19,11 +19,9 @@ func (e *Engine) Run(address string) {
 
 func Default() *Engine {
 
-	router := map[string]map[string]MyHandler{}
-	getRouter := map[string]MyHandler{}
-	postRouter := map[string]MyHandler{}
-	router["GET"] = getRouter
-	router["POST"] = postRouter
+	router := map[string]*Tree{}
+	router["GET"] = NewTree()
+	router["POST"] = NewTree()
 	return &Engine{
 		router,
 	}
@@ -37,10 +35,10 @@ func (e *Engine) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		log.Println("not found method")
 		return
 	}
-	r, ok := handlerMap[path]
-	if !ok {
+	r := handlerMap.FindHandler(path)
+	if r == nil {
 		res.WriteHeader(404)
-		res.Write([]byte("404"))
+		log.Println("没有注册handler")
 		return
 	}
 	r(NewContext(req, res))
@@ -52,11 +50,11 @@ type Group struct {
 }
 
 func (e *Engine) GET(path string, h MyHandler) {
-	e.router["GET"][path] = h
+	e.router["GET"].AddRouter(path, h)
 }
 
 func (e *Engine) POST(path string, h MyHandler) {
-	e.router["POST"][path] = h
+	e.router["POST"].AddRouter(path, h)
 }
 
 func NewGroup(e *Engine, prefix string) *Group {
