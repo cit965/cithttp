@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/cit965/cithttp"
-	"time"
 )
 
 func main() {
@@ -18,7 +17,13 @@ func main() {
 
 }
 
+type R struct {
+	Name string
+}
+
 func FooControllerHandler(c *cithttp.Context) {
-	time.Sleep(time.Second * 3)
-	c.Json(200, "success")
+	var r R
+	c.BindJson(&r)
+
+	c.Json(200, r)
 }
