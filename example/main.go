@@ -2,32 +2,23 @@ package main
 
 import (
 	"github.com/cit965/cithttp"
+	"time"
 )
 
 func main() {
-	e := cithttp.Default()
-	e.GET("foo", Foo)
-	e.GET("bff", Bff)
-	e.POST("bff", Bff)
-	e.POST("nnn/:dd", Bff)
-	group := e.Group("xfa/")
+	r := cithttp.Default()
+	r.GET("/foo", cithttp.Recovery(), cithttp.Log(), FooControllerHandler)
+	g := r.Group("/boo")
+	g.Use(cithttp.Log())
 	{
-		group.GET("ccc", Bff)
+		g.GET("/hello", FooControllerHandler)
+		g.GET("/xx/:id", FooControllerHandler)
 	}
-	e.Run(":8888")
+	r.Run(":8000")
+
 }
 
-func Foo(ctx *cithttp.Context) {
-
-	inlineStruct := struct {
-		Sss int `json:"sss"`
-	}{
-		2343,
-	}
-	ctx.Json(200, inlineStruct)
-}
-
-func Bff(ctx *cithttp.Context) {
-
-	ctx.String("bfff  handler")
+func FooControllerHandler(c *cithttp.Context) {
+	time.Sleep(time.Second * 3)
+	c.Json(200, "success")
 }

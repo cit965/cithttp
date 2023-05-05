@@ -2,49 +2,63 @@ package cithttp
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 )
 
+// Context is the most important part of ctp. It allows us get http request and response
 type Context struct {
-	Req *http.Request
-	Res http.ResponseWriter
+	Request  *http.Request
+	Writer   http.ResponseWriter
+	handlers []HandlerFunc
+	index    int
 }
 
-func NewContext(r *http.Request, res http.ResponseWriter) *Context {
+func NewContext(r *http.Request, w http.ResponseWriter) *Context {
 	return &Context{
-		Req: r,
-		Res: res,
+		Request: r,
+		Writer:  w,
+		index:   -1,
 	}
 }
 
-func (c *Context) Deadline() (deadline time.Time, ok bool) {
-	return c.Req.Context().Deadline()
-}
-func (c *Context) Done() <-chan struct{} {
-	return c.Req.Context().Done()
-}
-func (c *Context) Err() error {
-	return c.Req.Context().Err()
+func (ctx *Context) Deadline() (deadline time.Time, ok bool) {
+	return ctx.Request.Context().Deadline()
 }
 
-func (c *Context) Value(key any) any {
-	return c.Req.Context().Err()
+func (ctx *Context) Done() <-chan struct{} {
+	return ctx.Request.Context().Done()
 }
 
-func (c *Context) Json(status int, obj any) {
-	c.Res.Header().Set("Content-Type", "application/json")
-	c.Res.WriteHeader(status)
-	byteResult, err := json.Marshal(obj)
+func (ctx *Context) Err() error {
+	return ctx.Request.Context().Err()
+}
+
+func (ctx *Context) Value(key interface{}) interface{} {
+	return ctx.Request.Context().Value(key)
+}
+
+func (ctx *Context) Json(status int, obj interface{}) {
+
+	ctx.Writer.Header().Set("Content-Type", "application/json")
+	ctx.Writer.WriteHeader(status)
+	byt, err := json.Marshal(obj)
 	if err != nil {
-		c.Res.WriteHeader(500)
-		return
+		ctx.Writer.WriteHeader(500)
+		log.Print(err)
 	}
-	c.Res.Write(byteResult)
+	ctx.Writer.Write(byt)
 }
 
-func (c *Context) String(s string) {
-	c.Res.Header().Set("Content-Type", "plain/txt")
-	c.Res.WriteHeader(200)
-	c.Res.Write([]byte(s))
+// 核心函数，调用context的下一个函数
+func (ctx *Context) Next() {
+	ctx.index++
+	if ctx.index < len(ctx.handlers) {
+		ctx.handlers[ctx.index](ctx)
+	}
+}
+
+func (ctx *Context) SetHandlers(handlers []HandlerFunc) {
+	ctx.handlers = handlers
 }
